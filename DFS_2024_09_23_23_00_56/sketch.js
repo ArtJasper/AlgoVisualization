@@ -1,5 +1,5 @@
 let cols, rows;
-let w = 20; // 单元格的宽度，减小单元格尺寸以扩大迷宫
+let w = 20; // Width of each cell, decrease size to enlarge the maze
 let grid = [];
 let stack = [];
 let current;
@@ -8,11 +8,11 @@ let found = false;
 let obstacles = [];
 
 function setup() {
-  createCanvas(600, 600); // 扩大画布
+  createCanvas(600, 600); // Enlarged canvas size
   cols = floor(width / w);
   rows = floor(height / w);
   
-  // 初始化迷宫的所有单元格
+  // Initialize all cells in the maze
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       let cell = new Cell(i, j);
@@ -20,55 +20,55 @@ function setup() {
     }
   }
   
-  // 设置起点和目标
+  // Set the starting point and target
   current = grid[0];
   target = grid[floor(random(grid.length))];
   
-  // 将目标标记为目标单元格
+  // Mark the target cell
   target.target = true;
   
-  frameRate(20); // 控制动画速度
+  frameRate(20); // Control the animation speed
 }
 
 function draw() {
   background(51);
   
-  // 显示所有单元格
+  // Display all cells
   for (let i = 0; i < grid.length; i++) {
     grid[i].show();
   }
   
-  // 绘制障碍物
+  // Draw obstacles
   for (let i = 0; i < obstacles.length; i++) {
-    fill(255, 165, 0); // 障碍显示为橙色
+    fill(255, 165, 0); // Obstacles are shown in orange
     rect(obstacles[i].i * w, obstacles[i].j * w, w, w);
   }
   
   if (!found) {
     current.visited = true;
-    current.highlight(); // 当前单元格显示不同颜色
+    current.highlight(); // Current cell highlighted in different color
     
-    // 获取当前单元格的未访问邻居，跳过障碍物
+    // Get unvisited neighbors of the current cell, skip obstacles
     let next = current.checkNeighbors();
     
     if (next) {
       next.visited = true;
       stack.push(current);
-      current = next; // 移动到下一个单元格
+      current = next; // Move to the next cell
     } else if (stack.length > 0) {
-      current.backtrack = true; // 标记回溯路径
-      current = stack.pop(); // 回溯
+      current.backtrack = true; // Mark the backtracking path
+      current = stack.pop(); // Backtrack
     }
     
     if (current === target) {
-      found = true; // 找到目标
-      noLoop(); // 停止动画
-      console.log("目标已找到！");
+      found = true; // Target found
+      noLoop(); // Stop the animation
+      console.log("Target found!");
     }
   }
 }
 
-// 获取每个单元格的索引
+// Get the index of each cell
 function index(i, j) {
   if (i < 0 || j < 0 || i >= cols || j >= rows) {
     return -1;
@@ -76,7 +76,7 @@ function index(i, j) {
   return i + j * cols;
 }
 
-// 鼠标点击设置障碍
+// Set obstacles by clicking
 function mousePressed() {
   let i = floor(mouseX / w);
   let j = floor(mouseY / w);
@@ -84,20 +84,20 @@ function mousePressed() {
   let clickedCell = grid[index(i, j)];
   
   if (clickedCell && clickedCell !== current && clickedCell !== target) {
-    clickedCell.obstacle = true; // 将该单元格设置为障碍物
+    clickedCell.obstacle = true; // Set this cell as an obstacle
     obstacles.push(clickedCell);
   }
 }
 
-// 单元格类
+// Cell class
 class Cell {
   constructor(i, j) {
     this.i = i;
     this.j = j;
     this.visited = false;
     this.backtrack = false;
-    this.obstacle = false; // 新增障碍属性
-    this.walls = [true, true, true, true]; // 上、右、下、左
+    this.obstacle = false; // New obstacle property
+    this.walls = [true, true, true, true]; // Top, Right, Bottom, Left
     this.target = false;
   }
   
@@ -130,48 +130,48 @@ class Cell {
     }
   }
   
-  // 高亮当前单元格
+  // Highlight the current cell
   highlight() {
     let x = this.i * w;
     let y = this.j * w;
     noStroke();
-    fill(135, 206, 235); // 当前搜索位置显示为天蓝色
+    fill(135, 206, 235); // Current search position shown in light blue
     rect(x, y, w, w);
   }
   
-  // 显示单元格和墙
+  // Display the cell and its walls
   show() {
     let x = this.i * w;
     let y = this.j * w;
     //stroke(255);
     if (this.walls[0]) {
-      line(x, y, x + w, y); // 上
+      line(x, y, x + w, y); // Top
     }
     if (this.walls[1]) {
-      line(x + w, y, x + w, y + w); // 右
+      line(x + w, y, x + w, y + w); // Right
     }
     if (this.walls[2]) {
-      line(x + w, y + w, x, y + w); // 下
+      line(x + w, y + w, x, y + w); // Bottom
     }
     if (this.walls[3]) {
-      line(x, y + w, x, y); // 左
+      line(x, y + w, x, y); // Left
     }
     
     if (this.visited) {
       noStroke();
-      fill(0, 128, 128); // 搜索过的路径显示为青色
+      fill(0, 128, 128); // Path visited shown in teal
       rect(x, y, w, w);
     }
     
     if (this.backtrack) {
       noStroke();
-      fill(255, 255, 255, 100); // 回溯路径显示为白色
+      fill(255, 255, 255, 100); // Backtracking path shown in white
       rect(x, y, w, w);
     }
     
     if (this.target) {
       noStroke();
-      fill(255, 0, 0, 200); // 目标显示为红色
+      fill(255, 0, 0, 200); // Target shown in red
       rect(x, y, w, w);
     }
   }

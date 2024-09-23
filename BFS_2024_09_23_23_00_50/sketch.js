@@ -1,19 +1,19 @@
 let cols, rows;
-let w = 20; // 单元格的宽度
+let w = 20; // Width of each cell
 let grid = [];
-let queue = []; // 使用队列实现 BFS
+let queue = []; // Use queue for BFS
 let current;
 let target;
 let found = false;
-let startSet = false; // 标记起点是否已设置
-let targetSet = false; // 标记目标是否已设置
+let startSet = false; // Flag to indicate if the start point is set
+let targetSet = false; // Flag to indicate if the target point is set
 
 function setup() {
-  createCanvas(600, 600); // 画布尺寸
+  createCanvas(600, 600); // Canvas size
   cols = floor(width / w);
   rows = floor(height / w);
   
-  // 初始化迷宫的所有单元格
+  // Initialize all the cells of the maze
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       let cell = new Cell(i, j);
@@ -21,56 +21,59 @@ function setup() {
     }
   }
   
-  frameRate(10); // 控制动画速度
+  frameRate(7); // Control the animation speed
 }
 
 function draw() {
   background(51);
   
-  // 显示所有单元格
+  // Display all cells
   for (let i = 0; i < grid.length; i++) {
     grid[i].show();
   }
 
   if (!found && startSet && targetSet) {
     if (queue.length > 0) {
-      current = queue.shift(); // 从队列中取出当前单元格
+      current = queue.shift(); // Get the current cell from the queue
       if (!current.start) {
-        current.visitedCount++; // 增加访问次数，起点不增加
+        current.visitedCount++; // Increase visit count, the start point doesn't count
       }
 
-      // 遍历当前单元格的邻居
+      // Check if we have reached the target
+      if (current === target) {
+        found = true; // Mark as found
+        console.log("found target"); // Output message when target is found
+        //reconstructPath(); // Reconstruct the path
+        //noLoop(); // Stop the animation
+        return; // Ensure draw stops execution
+      }
+
+      // Iterate over the neighbors of the current cell
       let neighbors = current.getNeighbors();
-      shuffle(neighbors, true); // 随机打乱邻居的顺序
+      shuffle(neighbors, true); // Shuffle the neighbors randomly
       
       for (let i = 0; i < neighbors.length; i++) {
         let neighbor = neighbors[i];
         if (!neighbor.inQueue && !neighbor.obstacle) {
           if (adjustDirection(neighbor, current)) {
-            neighbor.previous = current; // 记录前驱节点
-            neighbor.inQueue = true; // 标记已加入队列
+            neighbor.previous = current; // Record the predecessor node
+            neighbor.inQueue = true; // Mark as added to the queue
             queue.push(neighbor);
           }
         }
       }
-
-      if (current === target) {
-        found = true; // 找到目标
-        reconstructPath(); // 重建路径
-        noLoop(); // 停止动画
-      }
     } else {
-      noLoop();
+      noLoop(); // Stop the animation if there are no more cells in the queue
     }
   }
 }
 
-// 根据障碍物调整搜索方向，避免继续朝障碍方向前进
+// Adjust search direction based on obstacles to avoid moving into obstacles
 function adjustDirection(neighbor, current) {
-  return !neighbor.obstacle; // 如果邻居是障碍物，则返回false，避免进入障碍物
+  return !neighbor.obstacle; // If the neighbor is an obstacle, return false to avoid entering the obstacle
 }
 
-// 重建路径并标记
+// Reconstruct the path and mark it
 function reconstructPath() {
   let temp = current;
   temp.isPath = true;
@@ -80,7 +83,7 @@ function reconstructPath() {
   }
 }
 
-// 获取每个单元格的索引
+// Get the index of each cell
 function index(i, j) {
   if (i < 0 || j < 0 || i >= cols || j >= rows) {
     return -1;
@@ -88,7 +91,7 @@ function index(i, j) {
   return i + j * cols;
 }
 
-// 鼠标点击：第一次点击设置起点，第二次点击设置目标，后续点击为障碍物
+// Mouse click: the first click sets the start point, the second click sets the target, subsequent clicks set obstacles
 function mousePressed() {
   let i = floor(mouseX / w);
   let j = floor(mouseY / w);
@@ -97,33 +100,33 @@ function mousePressed() {
   
   if (!startSet && clickedCell) {
     current = clickedCell;
-    current.start = true; // 标记为起点
-    queue.push(current); // 将起点加入队列
+    current.start = true; // Mark as the start point
+    queue.push(current); // Add the start point to the queue
     startSet = true;
   } else if (!targetSet && clickedCell) {
     target = clickedCell;
-    target.target = true; // 标记为目标
+    target.target = true; // Mark as the target
     targetSet = true;
   } else if (clickedCell && clickedCell !== current && clickedCell !== target) {
-    clickedCell.obstacle = true; // 设置障碍物
+    clickedCell.obstacle = true; // Set as obstacle
   }
 }
 
-// 单元格类
+// Cell class
 class Cell {
   constructor(i, j) {
     this.i = i;
     this.j = j;
-    this.visitedCount = 0; // 记录访问次数
+    this.visitedCount = 0; // Record the number of visits
     this.inQueue = false;
     this.obstacle = false;
-    this.isPath = false; // 用于标记最终路径
-    this.previous = undefined; // 前驱节点
-    this.start = false; // 标记是否是起点
-    this.target = false; // 标记是否是目标
+    this.isPath = false; // Mark for the final path
+    this.previous = undefined; // Predecessor node
+    this.start = false; // Mark if it is the start point
+    this.target = false; // Mark if it is the target point
   }
   
-  // 获取当前单元格的上下左右邻居
+  // Get the top, right, bottom, and left neighbors of the current cell
   getNeighbors() {
     let neighbors = [];
     
@@ -140,49 +143,49 @@ class Cell {
     return neighbors;
   }
   
-  // 显示单元格和墙
+  // Display the cell and its walls
   show() {
     let x = this.i * w;
     let y = this.j * w;
     stroke(255);
     
-    // 起点始终保持绿色，不随访问次数变化
+    // Start point remains green regardless of visit count
     if (this.start) {
       noStroke();
-      fill(0, 255, 0); // 起点显示为绿色
+      fill(0, 255, 0); // Start point shown in green
       rect(x, y, w, w);
     } 
-    // 二次及以上访问显示为白色
+    // Show white for the second and subsequent visits
     else if (this.visitedCount >= 2) {
       noStroke();
-      fill(255); // 二次及以上访问显示为白色
+      fill(255); // Second and subsequent visits shown in white
       rect(x, y, w, w);
     }
-    // 第一次访问显示青色
+    // Show teal for the first visit
     else if (this.visitedCount === 1) {
       noStroke();
-      fill(0, 128, 128); // 第一次访问的路径显示为青色
+      fill(0, 128, 128); // First visit path shown in teal
       rect(x, y, w, w);
     }
 
-    // 绘制障碍物
+    // Draw obstacles
     if (this.obstacle) {
       noStroke();
-      fill(255, 165, 0); // 障碍物显示为橙色
+      fill(255, 165, 0); // Obstacles shown in orange
       rect(x, y, w, w);
     }
 
-    // 绘制目标
+    // Draw the target
     if (this.target) {
       noStroke();
-      fill(255, 0, 0); // 目标显示为红色
+      fill(255, 0, 0); // Target shown in red
       rect(x, y, w, w);
     }
 
-    // 绘制最终路径
+    // Draw the final path
     if (this.isPath) {
       noStroke();
-      fill(255, 255, 255); // 最终路径显示为白色
+      fill(255, 255, 255); // Final path shown in white
       rect(x, y, w, w);
     }
   }
